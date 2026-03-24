@@ -4,94 +4,881 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rishit's Portfolio</title>
-  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/661/661764.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* ── Tokens ──────────────────────────────────────────────────────────────── */
+    :root {
+      --bg:     #080910;
+      --bg2:    #090b14;
+      --card:   rgba(13,15,26,.82);
+      --card2:  rgba(15,17,32,.88);
+      --border: rgba(110,70,190,.22);
+      --border-h: rgba(140,90,220,.42);
+      --nav:    rgba(6,5,14,.94);
+      --txt:    #eef2ff;
+      --sub:    #8b9cc4;
+      --faint:  #4d5e8a;
+      --accent: #3692e7;
+      --glow:   rgba(120,70,210,.22);
+      --green:  #3de087;
+      --red:    #e05555;
+      --mono:   'JetBrains Mono', monospace;
+      --sans:   'Inter', system-ui, sans-serif;
     }
 
-    .gif-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
+    /* ── Base ────────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: transparent;
+      color: var(--txt);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .gif-bg {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
+    /* ── Animated GIF background ─────────────────────────────────────────────── */
+    html::before {
+      content: "";
+      position: fixed;
+      inset: -6px;
+      z-index: -2;
+      background: url('https://i.pinimg.com/originals/82/71/49/827149ce2917cdec3e4e53d157237a92.gif') center / cover no-repeat;
+      background-attachment: fixed;
+      filter: blur(2px);
     }
 
-    .overlay-text {
-      position: absolute;
-      top: 42%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 900;
-      font-style: italic;
-      font-size: clamp(2.2rem, 6.5vw, 5.5rem);
-      white-space: nowrap;
-      color: #ffffff;
-      letter-spacing: 0.02em;
-      text-shadow:
-        0 0 15px rgba(255, 0, 120, 0.9),
-        0 0 35px rgba(255, 0, 120, 0.7),
-        0 0 70px rgba(255, 0, 120, 0.5),
-        2px 2px 0 #880033,
-        -2px -2px 0 #880033,
-        2px -2px 0 #880033,
-        -2px 2px 0 #880033;
-      animation: pulse 1.8s ease-in-out infinite alternate;
+    /* ── Dark overlay ────────────────────────────────────────────────────────── */
+    html::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(rgba(4,3,12,.74), rgba(4,3,12,.74));
+    }
+
+    .app-root { min-height: 100vh; position: relative; }
+
+    /* ── Ambient cursor glow ─────────────────────────────────────────────────── */
+    .cursor-glow {
       pointer-events: none;
-      user-select: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(700px circle at var(--cx, 50%) var(--cy, 50%), rgba(40,80,200,.06), transparent 60%);
     }
 
-    @keyframes pulse {
-      from {
-        text-shadow:
-          0 0 15px rgba(255, 0, 120, 0.9),
-          0 0 35px rgba(255, 0, 120, 0.7),
-          0 0 70px rgba(255, 0, 120, 0.5),
-          2px 2px 0 #880033,
-          -2px -2px 0 #880033,
-          2px -2px 0 #880033,
-          -2px 2px 0 #880033;
-        color: #ffffff;
-      }
-      to {
-        text-shadow:
-          0 0 20px rgba(0, 230, 255, 0.95),
-          0 0 50px rgba(0, 230, 255, 0.75),
-          0 0 100px rgba(0, 230, 255, 0.5),
-          2px 2px 0 #004455,
-          -2px -2px 0 #004455,
-          2px -2px 0 #004455,
-          -2px 2px 0 #004455;
-        color: #e0faff;
-      }
+    /* ── Topnav ──────────────────────────────────────────────────────────────── */
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .8rem 2rem;
+      background: var(--nav);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .topnav-left { display: flex; align-items: center; gap: .6rem; }
+
+    /* ── Clock ───────────────────────────────────────────────────────────────── */
+    .clock-wrap {
+      position: relative;
+      display: flex; align-items: center; gap: .35rem;
+    }
+    .clock-val {
+      font-family: var(--mono);
+      font-size: .82rem;
+      color: var(--txt);
+      font-weight: 500;
+      letter-spacing: .02em;
+    }
+    .clock-tooltip {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card2);
+      border: 1px solid var(--border-h);
+      border-radius: 7px;
+      padding: .3rem .65rem;
+      font-size: .75rem;
+      color: var(--txt);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .18s;
+      z-index: 200;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .clock-wrap:hover .clock-tooltip { opacity: 1; }
+
+    /* ── Pineapple ───────────────────────────────────────────────────────────── */
+    .pineapple-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .14s;
+      outline: none;
+    }
+    .pineapple-btn:hover { transform: scale(1.08); }
+    .pineapple-btn img { display: block; }
+
+    @keyframes pineapple-spin {
+      0%   { transform: rotate(0deg) scale(1.12); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    .pineapple-spin { animation: pineapple-spin .55s cubic-bezier(.22,1,.36,1) forwards; }
+
+    /* ── Nav links ───────────────────────────────────────────────────────────── */
+    .topnav-links { display: flex; gap: .2rem; }
+    .topnav-link {
+      background: transparent; border: none; cursor: pointer;
+      padding: .38rem .78rem; border-radius: 6px;
+      font-size: .85rem; font-weight: 500; font-family: var(--sans);
+      color: var(--sub); transition: background .14s, color .14s;
+    }
+    .topnav-link:hover { background: rgba(54,100,231,.1); color: var(--txt); }
+    .topnav-link.active { color: var(--txt); background: rgba(54,100,231,.14); }
+
+    .topnav-right { display: flex; min-width: 80px; justify-content: flex-end; }
+    .write-btn {
+      display: flex; align-items: center; gap: .4rem;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 6px;
+      padding: .38rem .9rem;
+      font-size: .82rem; font-weight: 600; font-family: var(--sans);
+      cursor: pointer; transition: opacity .14s;
+    }
+    .write-btn:hover { opacity: .85; }
+    .write-btn.hidden { display: none; }
+
+    /* ── Main ────────────────────────────────────────────────────────────────── */
+    .main-content {
+      max-width: 1020px; margin: 0 auto;
+      padding: 4rem 2rem 7rem;
+      position: relative; z-index: 1;
+    }
+
+    /* ── Reveal animation ────────────────────────────────────────────────────── */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s cubic-bezier(.22,1,.36,1), transform .55s cubic-bezier(.22,1,.36,1); }
+    .revealed { opacity: 1 !important; transform: none !important; }
+
+    /* ── Hero ────────────────────────────────────────────────────────────────── */
+    .hero { padding: 4.5rem 0 5rem; border-bottom: 1px solid var(--border); margin-bottom: 5rem; }
+    .hero-name {
+      font-size: clamp(3.5rem,9vw,6.5rem); font-weight: 800;
+      color: var(--txt); letter-spacing: -.04em; line-height: .95;
+      margin-bottom: 1.2rem;
+    }
+    .hero-typed {
+      font-size: 1.15rem; font-weight: 500; color: var(--sub);
+      font-family: var(--mono); min-height: 1.8em;
+      margin-bottom: 1.4rem; display: flex; align-items: center; gap: 1px;
+    }
+    .cursor { color: var(--accent); animation: blink .9s step-end infinite; }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+    .hero-tagline { font-size: 1rem; color: var(--sub); max-width: 500px; line-height: 1.75; }
+    .hero-hl { color: var(--accent); font-weight: 600; }
+
+    /* ── Live badge ──────────────────────────────────────────────────────────── */
+    .live-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 100px; padding: .28rem .875rem .28rem .6rem;
+      margin-bottom: 2rem;
+    }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+    .live-label { font-size: .6rem; font-weight: 700; letter-spacing: .14em; color: var(--green); font-family: var(--mono); }
+    .live-count { font-size: .88rem; font-weight: 700; color: var(--txt); font-family: var(--mono); }
+    .live-sub   { font-size: .7rem; color: var(--sub); }
+
+    /* ── Section ─────────────────────────────────────────────────────────────── */
+    .section { margin-bottom: 5rem; }
+    .section-label {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .16em;
+      color: var(--sub); font-family: var(--mono); font-weight: 600;
+      margin-bottom: 1.75rem; padding-bottom: .75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Glow card ───────────────────────────────────────────────────────────── */
+    .glow-card {
+      position: relative;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      transition: border-color .2s, transform .3s cubic-bezier(.22,1,.36,1);
+    }
+    .glow-card::before {
+      content: ""; pointer-events: none;
+      position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 70%);
+      opacity: 0; transition: opacity .22s; z-index: 0;
+    }
+    .glow-card:hover::before { opacity: 1; }
+    .glow-card:hover { border-color: var(--border-h); transform: translateY(-2px); }
+    .glow-card > * { position: relative; z-index: 1; }
+
+    /* ── About ───────────────────────────────────────────────────────────────── */
+    .about-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; }
+    .about-main { padding: 1.75rem 2rem; }
+    .about-side { display: flex; flex-direction: column; gap: 1rem; }
+    .about-lead { font-size: 1.05rem; font-weight: 700; color: var(--txt); margin-bottom: .75rem; line-height: 1.4; }
+    .about-body { font-size: .92rem; color: var(--sub); line-height: 1.8; margin-top: .6rem; }
+
+    .info-block  { padding: 1.2rem 1.4rem; }
+    .side-heading {
+      font-size: .65rem; text-transform: uppercase; letter-spacing: .13em;
+      color: var(--sub); font-family: var(--mono); font-weight: 600;
+      margin-bottom: .8rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+    }
+    .ib-row { display: flex; justify-content: space-between; padding: .38rem 0; border-bottom: 1px solid var(--border); gap: .5rem; }
+    .ib-row:last-child { border-bottom: none; }
+    .ib-k { font-size: .82rem; color: var(--sub); font-weight: 500; }
+    .ib-v { font-size: .82rem; color: var(--txt); font-family: var(--mono); text-align: right; font-weight: 500; }
+
+    .extras-block { display: flex; flex-direction: column; gap: .5rem; }
+    .extra-row { display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem; }
+    .extra-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .extra-name { font-size: .88rem; font-weight: 600; color: var(--txt); }
+    .extra-detail { font-size: .76rem; color: var(--sub); margin-top: .1rem; }
+
+    /* ── Projects ────────────────────────────────────────────────────────────── */
+    .proj-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .875rem; align-items: start; }
+    .proj-card { display: flex; flex-direction: column; }
+    .proj-img {
+      height: 140px; display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .proj-body { padding: 1.125rem; flex: 1; display: flex; flex-direction: column; gap: .45rem; }
+    .proj-head-row { display: flex; align-items: center; justify-content: space-between; }
+    .proj-name { font-size: .95rem; font-weight: 700; color: var(--txt); letter-spacing: -.01em; }
+    .proj-sub  { font-size: .76rem; line-height: 1.4; font-weight: 500; }
+    .proj-desc { font-size: .82rem; color: var(--sub); line-height: 1.65; margin-top: .15rem; }
+    .proj-icon svg { display: block; }
+
+    /* ── Blog ────────────────────────────────────────────────────────────────── */
+    .empty-blog {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2.5rem;
+      text-align: center; color: var(--sub); font-size: .88rem; line-height: 1.7;
+    }
+    .empty-blog strong { color: var(--accent); }
+    .blog-list { display: flex; flex-direction: column; gap: .875rem; }
+
+    .post-card { padding: 1.5rem; display: flex; flex-direction: column; gap: .875rem; }
+    .post-top  { display: flex; justify-content: space-between; align-items: flex-start; gap: .875rem; }
+    .post-date { font-size: .66rem; color: var(--faint); font-family: var(--mono); letter-spacing: .05em; margin-bottom: .35rem; }
+    .post-title { font-size: 1.08rem; font-weight: 700; color: var(--txt); line-height: 1.35; letter-spacing: -.01em; }
+
+    .del-btn {
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--sub); padding: .3rem .4rem; cursor: pointer; flex-shrink: 0;
+      transition: color .14s, border-color .14s;
+    }
+    .del-btn:hover { color: var(--red); border-color: rgba(224,85,85,.35); }
+    .del-btn.hidden { display: none; }
+
+    .post-body-text { display: flex; flex-direction: column; gap: .6rem; }
+    .read-btn {
+      font-size: .76rem; color: var(--accent); background: transparent;
+      border: none; cursor: pointer; font-family: var(--mono); padding: 0;
+      align-self: flex-start; transition: opacity .13s;
+    }
+    .read-btn:hover { opacity: .7; }
+
+    /* ── Comments ────────────────────────────────────────────────────────────── */
+    .comment-section {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      display: flex; flex-direction: column; gap: .6rem;
+    }
+    .c-label {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .63rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--faint); font-family: var(--mono);
+    }
+    .comments-list { display: flex; flex-direction: column; gap: .4rem; }
+    .c-empty { font-size: .78rem; color: var(--faint); font-style: italic; }
+    .comment { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: .625rem .875rem; }
+    .c-meta   { display: flex; justify-content: space-between; margin-bottom: .2rem; }
+    .c-author { font-size: .78rem; font-weight: 600; color: var(--accent); }
+    .c-ts     { font-size: .65rem; color: var(--faint); font-family: var(--mono); }
+    .c-text   { font-size: .82rem; color: var(--sub); line-height: 1.6; }
+
+    .c-form { display: flex; flex-direction: column; gap: .4rem; padding-top: .5rem; border-top: 1px solid var(--border); }
+    .c-field {
+      width: 100%; background: var(--card2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--txt); font-size: .82rem; font-family: var(--sans);
+      padding: .5rem .75rem; outline: none; transition: border-color .14s;
+    }
+    .c-field::placeholder { color: var(--faint); }
+    .c-field:focus { border-color: var(--accent); }
+    .c-ta { resize: vertical; min-height: 76px; }
+    .c-submit {
+      align-self: flex-start; background: var(--accent); color: #fff;
+      border: none; border-radius: 7px; padding: .38rem .85rem;
+      font-size: .78rem; font-weight: 600; font-family: var(--sans);
+      cursor: pointer; transition: opacity .13s;
+    }
+    .c-submit:hover { opacity: .85; }
+
+    /* ── Compose modal ───────────────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border-h);
+      border-radius: 14px; padding: 1.75rem;
+      width: 100%; max-width: 620px;
+      display: flex; flex-direction: column; gap: 1rem;
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; }
+    .modal-title  { font-size: .98rem; font-weight: 700; color: var(--txt); }
+    .modal-close  {
+      background: transparent; border: none; color: var(--sub);
+      cursor: pointer; padding: .25rem; border-radius: 4px; transition: color .13s;
+    }
+    .modal-close:hover { color: var(--txt); }
+
+    .compose-field {
+      width: 100%; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--txt); font-size: .92rem; font-family: var(--sans);
+      padding: .65rem .9rem; outline: none; transition: border-color .14s;
+    }
+    .compose-field::placeholder { color: var(--faint); }
+    .compose-field:focus { border-color: var(--accent); }
+    .compose-ta { resize: vertical; min-height: 200px; font-size: .88rem; line-height: 1.7; }
+    .compose-err { font-size: .78rem; color: var(--red); display: none; }
+    .compose-err.show { display: block; }
+
+    .modal-footer { display: flex; justify-content: flex-end; gap: .625rem; }
+    .cancel-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 7px; color: var(--sub); font-family: var(--sans);
+      font-size: .82rem; padding: .45rem 1rem; cursor: pointer; transition: color .13s, border-color .13s;
+    }
+    .cancel-btn:hover { color: var(--txt); border-color: var(--border-h); }
+    .publish-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 7px; padding: .45rem 1.25rem;
+      font-size: .82rem; font-weight: 600; font-family: var(--sans);
+      cursor: pointer; transition: opacity .13s;
+    }
+    .publish-btn:hover { opacity: .85; }
+
+    /* ── Typography ──────────────────────────────────────────────────────────── */
+    .body-p { font-size: .88rem; color: var(--sub); line-height: 1.8; }
+
+    /* ── Section visibility ──────────────────────────────────────────────────── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Responsive ──────────────────────────────────────────────────────────── */
+    @media (max-width: 820px) {
+      .main-content { padding: 2rem 1.25rem 5rem; }
+      .about-grid   { grid-template-columns: 1fr; }
+      .proj-grid    { grid-template-columns: 1fr; }
+      .topnav       { padding: .7rem 1.25rem; }
+      .hero-name    { font-size: 3rem; }
     }
   </style>
 </head>
 <body>
-  <div class="gif-container">
-    <img
-      class="gif-bg"
-      src="https://preview.redd.it/the-first-rickroll-occurred-19-years-after-the-songs-v0-i8ijkqb0v2cf1.gif?width=498&auto=webp&s=e36e0c4f6cfa8ec104f91ec0a4f80823c04ed36b"
-      alt="rickroll"
-    />
-    <div class="overlay-text">you got rickrolled :)</div>
+<div class="app-root">
+
+  <!-- Ambient cursor glow -->
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <!-- ── Nav ── -->
+  <nav class="topnav">
+    <div class="topnav-left">
+      <button class="pineapple-btn" id="pineappleBtn" title="🍍" aria-label="Pineapple">
+        <img src="https://cdn-icons-png.flaticon.com/512/661/661764.png" alt="pineapple" width="26" height="26" draggable="false" />
+      </button>
+      <div class="clock-wrap">
+        <span class="clock-val" id="clockVal">--:--:--</span>
+        <span class="clock-tooltip" id="clockTooltip"></span>
+      </div>
+    </div>
+    <div class="topnav-links">
+      <button class="topnav-link active" data-page="about">About</button>
+      <button class="topnav-link" data-page="projects">Projects</button>
+      <button class="topnav-link" data-page="blog">Blog</button>
+    </div>
+    <div class="topnav-right">
+      <button class="write-btn hidden" id="writeBtn">
+        <img src="https://cdn-icons-png.flaticon.com/512/661/661764.png" alt="" width="14" height="14" style="filter:invert(1);opacity:.9" />
+        Write
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main class="main-content">
+
+    <!-- Hero (always visible) -->
+    <div class="hero reveal" id="heroSection">
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        <span class="live-label">VIEWS</span>
+        <span class="live-count" id="liveCount">0</span>
+        <span class="live-sub">total</span>
+      </div>
+      <h1 class="hero-name">Rishit.</h1>
+      <div class="hero-typed">
+        <span id="typedText"></span><span class="cursor">|</span>
+      </div>
+      <p class="hero-tagline">
+        I build things at the intersection of economics, product design, and the teen economy.
+        Currently working on <span class="hero-hl">Studysloth</span>.
+      </p>
+    </div>
+
+    <!-- ── About ── -->
+    <div class="page active" id="page-about">
+      <div class="section">
+        <div class="section-label reveal">About</div>
+        <div class="about-grid">
+          <div class="about-main glow-card reveal">
+            <p class="about-lead">I'm Rishit — a 16-year-old builder from Singapore.</p>
+            <p class="about-body">I study Commerce and Applied Mathematics at GIIS Singapore, but most of what I care about happens outside the classroom. I've built and shipped three products, one of which is still active. I think seriously about markets, specifically the ones that conventional wisdom writes off as too small or too weird — like the teen economy.</p>
+            <p class="about-body">Teenagers are active economic participants. They buy, sell, trade, and transact constantly — and almost no serious infrastructure has been built for them. That gap is where I spend most of my thinking time.</p>
+            <p class="about-body">Outside of building: I play competitive chess (FIDE 1573), read about market microstructure, and moderate communities. I like problems that look simple until you get close enough to see all the ways they aren't.</p>
+          </div>
+          <div class="about-side">
+            <div class="info-block glow-card reveal">
+              <div class="side-heading">Where I study</div>
+              <div class="ib-row"><span class="ib-k">School</span><span class="ib-v">GIIS Singapore</span></div>
+              <div class="ib-row"><span class="ib-k">Year</span><span class="ib-v">Grade 11</span></div>
+              <div class="ib-row"><span class="ib-k">Subjects</span><span class="ib-v">Commerce · Applied Math</span></div>
+            </div>
+            <div class="extras-block reveal">
+              <div class="side-heading">Outside class</div>
+              <div class="extra-row glow-card">
+                <span class="extra-icon">♟</span>
+                <div><div class="extra-name">Competitive Chess</div><div class="extra-detail">FIDE Rating: 1573</div></div>
+              </div>
+              <div class="extra-row glow-card">
+                <span class="extra-icon">⚖</span>
+                <div><div class="extra-name">Market Arbitrage</div><div class="extra-detail">Teen consumer economics</div></div>
+              </div>
+              <div class="extra-row glow-card">
+                <span class="extra-icon">🌐</span>
+                <div><div class="extra-name">Community Architecture</div><div class="extra-detail">Peer governance &amp; trust</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Projects ── -->
+    <div class="page" id="page-projects">
+      <div class="section">
+        <div class="section-label reveal">Projects</div>
+        <div class="proj-grid">
+
+          <!-- Watchtower -->
+          <div class="proj-card glow-card reveal">
+            <div class="proj-img" style="background:linear-gradient(145deg,#0d1a35,#091222);border-bottom:1px solid var(--border)">
+              <span style="color:#6c8fc7">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="34" height="34"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </span>
+            </div>
+            <div class="proj-body">
+              <div class="proj-head-row"><span class="proj-name">Watchtower</span></div>
+              <div class="proj-sub" style="color:#6c8fc7">Security &amp; Trust Protocol for Digital Communities</div>
+              <p class="proj-desc">A peer-moderated trust layer that crowdsources fraud signals and surfaces them through a lightweight verification interface — giving ordinary users institutional-grade protection.</p>
+            </div>
+          </div>
+
+          <!-- Studysloth -->
+          <div class="proj-card glow-card reveal">
+            <div class="proj-img" style="background:linear-gradient(145deg,#091a3a,#060f24);border-bottom:1px solid var(--border)">
+              <span style="color:#3692e7">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="34" height="34">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="proj-body">
+              <div class="proj-head-row"><span class="proj-name">Studysloth</span></div>
+              <div class="proj-sub" style="color:#3692e7">Educational Ecosystem for the Modern Student</div>
+              <p class="proj-desc">Spaced-repetition platform that treats memory as an engineering problem. Adaptive schedules built around individual forgetting curves.</p>
+            </div>
+          </div>
+
+          <!-- Brainwave -->
+          <div class="proj-card glow-card reveal">
+            <div class="proj-img" style="background:linear-gradient(145deg,#11103a,#0b0a28);border-bottom:1px solid var(--border)">
+              <span style="color:#7b6ee8">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="34" height="34">
+                  <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.07-3.43 3 3 0 0 1 .34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.87-1.29z"/>
+                  <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.07-3.43 3 3 0 0 0-.34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.87-1.29z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="proj-body">
+              <div class="proj-head-row"><span class="proj-name">Brainwave</span></div>
+              <div class="proj-sub" style="color:#7b6ee8">Gamified Productivity Architecture</div>
+              <p class="proj-desc">Productivity suite engineered around adolescent attention cycles — short bursts, social accountability, and reward sensitivity baked into the core interaction model.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Blog ── -->
+    <div class="page" id="page-blog">
+      <div class="section">
+        <div class="section-label reveal">Analysis</div>
+        <div id="emptyBlog" class="empty-blog reveal" style="display:none">
+          <p>No posts yet. Hit <strong>Write</strong> in the nav to publish your first entry.</p>
+        </div>
+        <div class="blog-list" id="blogList"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Compose Modal ── -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Post</span>
+      <button class="modal-close" id="modalClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <input class="compose-field" id="postTitle" placeholder="Title" />
+    <textarea class="compose-ta compose-field" id="postBody" placeholder="Write your post here..."></textarea>
+    <div class="compose-err" id="composeErr"></div>
+    <div class="modal-footer">
+      <button class="cancel-btn" id="modalCancel">Cancel</button>
+      <button class="publish-btn" id="publishBtn">Publish →</button>
+    </div>
   </div>
+</div>
+
+<script>
+// ── Persistence ──────────────────────────────────────────────────────────────
+function initViews() {
+  try {
+    const n = parseInt(localStorage.getItem("obs_views") || "0", 10);
+    const next = (isNaN(n) ? 0 : n) + 1;
+    localStorage.setItem("obs_views", String(next));
+    return next;
+  } catch { return 1; }
+}
+function loadPosts() {
+  try { return JSON.parse(localStorage.getItem("obs_posts") || "[]"); } catch { return []; }
+}
+function savePosts(p) {
+  try { localStorage.setItem("obs_posts", JSON.stringify(p)); } catch {}
+}
+function loadComments() {
+  try { return JSON.parse(localStorage.getItem("obs_comments") || "{}"); } catch { return {}; }
+}
+function saveComments(c) {
+  try { localStorage.setItem("obs_comments", JSON.stringify(c)); } catch {}
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+const views = initViews();
+let posts = loadPosts();
+let comments = loadComments();
+let writeMode = false;
+let currentPage = "about";
+
+// ── Live view counter animation ──────────────────────────────────────────────
+(function animateViews() {
+  const el = document.getElementById("liveCount");
+  if (!views) return;
+  const step = Math.max(1, Math.ceil(views / 50));
+  let cur = 0;
+  const id = setInterval(() => {
+    cur = Math.min(cur + step, views);
+    el.textContent = cur.toLocaleString();
+    if (cur >= views) clearInterval(id);
+  }, 22);
+})();
+
+// ── Clock ────────────────────────────────────────────────────────────────────
+function getTooltip(h) {
+  if (h >= 5 && h < 12)  return "Good morning ☀️";
+  if (h >= 12 && h < 17) return "Good afternoon ☀️";
+  if (h >= 17 && h < 20) return "Good evening 🌇";
+  return "It's currently night 🌙";
+}
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clockVal").textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  document.getElementById("clockTooltip").textContent = getTooltip(now.getHours());
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── Mouse glow ───────────────────────────────────────────────────────────────
+window.addEventListener("mousemove", e => {
+  document.querySelectorAll(".glow-card").forEach(card => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    card.style.setProperty("--my", (e.clientY - r.top) + "px");
+  });
+  document.documentElement.style.setProperty("--cx", e.clientX + "px");
+  document.documentElement.style.setProperty("--cy", e.clientY + "px");
+}, { passive: true });
+
+// ── IntersectionObserver reveal ──────────────────────────────────────────────
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("revealed"); });
+}, { threshold: 0.07 });
+function observeReveals() {
+  document.querySelectorAll(".reveal").forEach(el => revealObs.observe(el));
+}
+observeReveals();
+
+// ── Typing animation ─────────────────────────────────────────────────────────
+const HERO_LINES = ["15 year old.", "Inquisitive Mind.", "Chess player.", "Perspicacious Thinker."];
+let lineIdx = 0, charIdx = 0, deleting = false, paused = false;
+const typedEl = document.getElementById("typedText");
+
+function typeStep() {
+  const current = HERO_LINES[lineIdx];
+  if (paused) return;
+  if (!deleting) {
+    if (charIdx < current.length) {
+      typedEl.textContent = current.slice(0, ++charIdx);
+      setTimeout(typeStep, 60);
+    } else {
+      paused = true;
+      setTimeout(() => { paused = false; deleting = true; typeStep(); }, 1800);
+    }
+  } else {
+    if (charIdx > 0) {
+      typedEl.textContent = current.slice(0, --charIdx);
+      setTimeout(typeStep, 30);
+    } else {
+      deleting = false;
+      lineIdx = (lineIdx + 1) % HERO_LINES.length;
+      setTimeout(typeStep, 60);
+    }
+  }
+}
+typeStep();
+
+// ── Nav tabs ─────────────────────────────────────────────────────────────────
+function showPage(id) {
+  currentPage = id;
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".topnav-link").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-" + id).classList.add("active");
+  document.querySelector(`[data-page="${id}"]`).classList.add("active");
+  observeReveals();
+  if (id === "blog") renderBlog();
+}
+document.querySelectorAll(".topnav-link").forEach(btn => {
+  btn.addEventListener("click", () => showPage(btn.dataset.page));
+});
+
+// ── Pineapple ─────────────────────────────────────────────────────────────────
+const pineappleBtn = document.getElementById("pineappleBtn");
+let pineappleClicks = [];
+pineappleBtn.addEventListener("click", () => {
+  pineappleBtn.classList.remove("pineapple-spin");
+  void pineappleBtn.offsetWidth; // reflow
+  pineappleBtn.classList.add("pineapple-spin");
+
+  const now = Date.now();
+  pineappleClicks = pineappleClicks.filter(t => now - t < 2000);
+  pineappleClicks.push(now);
+  if (pineappleClicks.length >= 3) {
+    pineappleClicks = [];
+    writeMode = !writeMode;
+    document.getElementById("writeBtn").classList.toggle("hidden", !writeMode);
+  }
+});
+pineappleBtn.addEventListener("animationend", () => pineappleBtn.classList.remove("pineapple-spin"));
+
+// ── Write button & Modal ──────────────────────────────────────────────────────
+const modal = document.getElementById("modal");
+document.getElementById("writeBtn").addEventListener("click", openModal);
+document.getElementById("modalClose").addEventListener("click", closeModal);
+document.getElementById("modalCancel").addEventListener("click", closeModal);
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+function openModal() {
+  document.getElementById("postTitle").value = "";
+  document.getElementById("postBody").value = "";
+  document.getElementById("composeErr").textContent = "";
+  document.getElementById("composeErr").classList.remove("show");
+  modal.classList.add("open");
+}
+function closeModal() { modal.classList.remove("open"); }
+
+document.getElementById("publishBtn").addEventListener("click", () => {
+  const title = document.getElementById("postTitle").value.trim();
+  const body  = document.getElementById("postBody").value.trim();
+  const errEl = document.getElementById("composeErr");
+  if (!title) { errEl.textContent = "Title is required."; errEl.classList.add("show"); return; }
+  if (!body)  { errEl.textContent = "Body is required.";  errEl.classList.add("show"); return; }
+  const post = {
+    id:    "post_" + Date.now(),
+    title,
+    body,
+    date: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+  };
+  posts.push(post);
+  savePosts(posts);
+  closeModal();
+  showPage("blog");
+});
+
+// ── Blog rendering ────────────────────────────────────────────────────────────
+function renderBlog() {
+  const list = document.getElementById("blogList");
+  const empty = document.getElementById("emptyBlog");
+  list.innerHTML = "";
+  if (posts.length === 0) {
+    empty.style.display = "";
+    return;
+  }
+  empty.style.display = "none";
+  [...posts].reverse().forEach(post => {
+    list.appendChild(makePostCard(post));
+  });
+  observeReveals();
+}
+
+function makePostCard(post) {
+  const postComments = comments[post.id] || [];
+  const card = document.createElement("div");
+  card.className = "post-card glow-card reveal";
+  card.dataset.id = post.id;
+
+  let open = false;
+
+  function getBodyHTML() {
+    const paras = post.body.split("\n\n");
+    const toShow = open ? paras : [paras[0]];
+    return toShow.map(p => `<p class="body-p">${escapeHtml(p)}</p>`).join("");
+  }
+
+  card.innerHTML = `
+    <div class="post-top">
+      <div>
+        <div class="post-date">${escapeHtml(post.date)}</div>
+        <h3 class="post-title">${escapeHtml(post.title)}</h3>
+      </div>
+      <button class="del-btn${writeMode ? "" : " hidden"}" title="Delete post">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="post-body-text" id="body-${post.id}">${getBodyHTML()}</div>
+    <button class="read-btn" id="readbtn-${post.id}">Read more →</button>
+    <div class="comment-section">
+      <div class="c-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Discussion · <span class="c-count">${postComments.length}</span>
+      </div>
+      <div class="comments-list" id="clist-${post.id}">
+        ${renderComments(postComments)}
+      </div>
+      <div class="c-form">
+        <input class="c-field c-name" placeholder="Your name" />
+        <textarea class="c-field c-ta c-text-in" placeholder="Leave a comment..."></textarea>
+        <button class="c-submit">Post →</button>
+      </div>
+    </div>
+  `;
+
+  // Read more toggle
+  const readBtn = card.querySelector(".read-btn");
+  readBtn.addEventListener("click", () => {
+    open = !open;
+    card.querySelector(".post-body-text").innerHTML = getBodyHTML();
+    readBtn.textContent = open ? "Show less" : "Read more →";
+  });
+
+  // Delete
+  card.querySelector(".del-btn").addEventListener("click", () => {
+    posts = posts.filter(p => p.id !== post.id);
+    savePosts(posts);
+    const { [post.id]: _, ...rest } = comments;
+    comments = rest;
+    saveComments(comments);
+    renderBlog();
+  });
+
+  // Comment submit
+  card.querySelector(".c-submit").addEventListener("click", () => {
+    const nameEl = card.querySelector(".c-name");
+    const textEl = card.querySelector(".c-text-in");
+    const name = nameEl.value.trim();
+    const text = textEl.value.trim();
+    if (!name || !text) return;
+    const c = {
+      id: String(Date.now()),
+      author: name,
+      text,
+      ts: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+    };
+    if (!comments[post.id]) comments[post.id] = [];
+    comments[post.id].push(c);
+    saveComments(comments);
+    nameEl.value = "";
+    textEl.value = "";
+    card.querySelector(".c-count").textContent = comments[post.id].length;
+    card.querySelector(".comments-list").innerHTML = renderComments(comments[post.id]);
+  });
+
+  return card;
+}
+
+function renderComments(arr) {
+  if (!arr || arr.length === 0) return `<p class="c-empty">No comments yet — be the first.</p>`;
+  return arr.map(c => `
+    <div class="comment">
+      <div class="c-meta">
+        <span class="c-author">${escapeHtml(c.author)}</span>
+        <span class="c-ts">${escapeHtml(c.ts)}</span>
+      </div>
+      <p class="c-text">${escapeHtml(c.text)}</p>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Initial render
+renderBlog();
+observeReveals();
+</script>
 </body>
 </html>
