@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rishit's Portfolio</title>
-  <link rel="icon" type="image/png" href="https://cdn3.emoji.gg/emojis/7017-panda-exicted.png" />
+  <link rel="icon" type="image/png" href="https://cdn3.emoji.gg/emojis/7017-panda-exicted.png?v=2" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -186,7 +186,20 @@
     .cursor { color: var(--accent); animation: blink .9s step-end infinite; }
     @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
 
-    .hero-tagline { font-size: 1rem; color: var(--sub); max-width: 500px; line-height: 1.75; }
+    .hero-tagline { font-size: 1rem; color: var(--sub); max-width: 520px; line-height: 1.75; }
+    .fact-label {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .63rem; font-family: var(--mono); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .14em;
+      color: var(--accent); margin-bottom: .45rem;
+    }
+    .fact-refresh {
+      background: none; border: none; cursor: pointer;
+      color: var(--faint); font-size: .75rem; padding: 0 .1rem;
+      transition: color .15s, transform .25s;
+      line-height: 1; vertical-align: middle;
+    }
+    .fact-refresh:hover { color: var(--accent); transform: rotate(180deg); }
     .hero-hl { color: var(--accent); font-weight: 600; }
 
     /* ── Live badge ──────────────────────────────────────────────────────────── */
@@ -478,10 +491,13 @@
       <div class="hero-typed">
         <span id="typedText"></span><span class="cursor">|</span>
       </div>
-      <p class="hero-tagline">
-        I build things at the intersection of economics, product design, and the teen economy.
-        Currently working on <span class="hero-hl">Studysloth</span>.
-      </p>
+      <div class="hero-tagline">
+        <div class="fact-label">
+          did you know
+          <button class="fact-refresh" id="factRefresh" title="New fact">↻</button>
+        </div>
+        <p id="factText"></p>
+      </div>
 
       <div class="social-bar">
         <!-- YouTube -->
@@ -966,9 +982,59 @@ function escapeHtml(str) {
   return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+// ── Random facts ─────────────────────────────────────────────────────────────
+const FACTS = [
+  "The first chess computer program was written in 1951 by Alan Turing — by hand, since no computer existed yet to run it.",
+  "A chess game has more possible positions than there are atoms in the observable universe.",
+  "The word 'checkmate' comes from the Persian phrase 'Shah Mat' — meaning 'the king is dead'.",
+  "Honey never spoils. Archaeologists found 3,000-year-old honey in Egyptian tombs that was still edible.",
+  "The shortest war in history lasted 38 to 45 minutes — between Britain and Zanzibar in 1896.",
+  "Cleopatra lived closer in time to the Moon landing than to the construction of the Great Pyramid.",
+  "A day on Venus is longer than a year on Venus — it rotates so slowly it completes an orbit before one full spin.",
+  "The world's first stock market was created in Amsterdam in 1602 — to fund the Dutch East India Company.",
+  "Teenagers control an estimated $830 billion in spending power globally — yet almost no financial products are built for them.",
+  "The Roman Empire and the Han Dynasty in China existed at exactly the same time, yet never knew about each other.",
+  "The median age of a Fortune 500 CEO when they founded their company was 39 — but Zuckerberg, Dell, and Gates were all under 21.",
+  "There are more possible iterations of a game of chess than there are atoms in the known universe.",
+  "The word 'salary' comes from 'sal' — Latin for salt — because Roman soldiers were sometimes paid in salt.",
+  "Oxford University is older than the Aztec Empire.",
+  "In 2008, Iceland's economy collapsed so badly that the entire country went technically bankrupt.",
+  "The original QWERTY keyboard layout was designed to slow typists down to prevent mechanical jams.",
+  "Bitcoin's creator Satoshi Nakamoto has never been identified — and their wallet holds ~$60B untouched since 2009.",
+  "The dot over the letters 'i' and 'j' is called a tittle.",
+  "The world's first computer bug was an actual moth, found stuck in a Harvard Mark II relay in 1947.",
+  "A group of flamingos is called a flamboyance.",
+  "Nintendo was founded in 1889 — originally as a playing card company.",
+  "More people have been to the Moon than have swum to the deepest point of the ocean.",
+  "The inventor of the Pringles can was buried in one.",
+  "In ancient Rome, you could rent a urine pot from a landlord — urine was used as a cleaning agent and taxed.",
+  "It would take about 1.2 million mosquitoes, each sucking once, to completely drain the average human of blood.",
+];
+
+let lastFactIdx = -1;
+function getRandomFact() {
+  let idx;
+  do { idx = Math.floor(Math.random() * FACTS.length); } while (idx === lastFactIdx);
+  lastFactIdx = idx;
+  return FACTS[idx];
+}
+function setFact() {
+  const el = document.getElementById("factText");
+  if (!el) return;
+  el.style.opacity = "0";
+  el.style.transition = "opacity .25s";
+  setTimeout(() => {
+    el.textContent = getRandomFact();
+    el.style.opacity = "1";
+  }, 150);
+}
+setFact();
+document.getElementById("factRefresh").addEventListener("click", setFact);
+
 // Initial render
 renderBlog();
 observeReveals();
 </script>
 </body>
 </html>
+
