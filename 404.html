@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Uh Oh</title>
+  <title>404 — Rishit</title>
   <link rel="icon" type="image/png" href="https://cdn3.emoji.gg/emojis/7017-panda-exicted.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
   <style>
@@ -47,17 +47,22 @@
     }
 
     .home-link {
-      margin-top: .4rem;
+      position: fixed;
+      bottom: 3rem; left: 50%; transform: translateX(-50%);
+      z-index: 20;
       display: inline-flex; align-items: center; gap: .4rem;
       color: #3692e7; text-decoration: none;
       font-size: .88rem; font-weight: 600;
       opacity: 0; transition: opacity .6s ease;
       pointer-events: none;
-      border: 1px solid rgba(54,146,231,.3);
-      border-radius: 8px; padding: .42rem 1rem;
+      border: 1px solid rgba(54,146,231,.35);
+      border-radius: 8px; padding: .48rem 1.2rem;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      white-space: nowrap;
     }
     .home-link.show { opacity: 1; pointer-events: all; }
-    .home-link:hover { background: rgba(54,146,231,.1); }
+    .home-link:hover { background: rgba(54,146,231,.15); border-color: rgba(54,146,231,.6); }
 
     /* ── Glass canvas ── */
     #glass {
@@ -87,8 +92,9 @@
     <span class="err-label">Error</span>
     <div class="err-num">404</div>
     <p class="err-msg">Looks like you're lost.</p>
-    <a class="home-link" href="/" id="homeLink">← Back to home</a>
   </div>
+
+  <a class="home-link" href="/" id="homeLink">← Back to home</a>
 
   <span class="hint" id="hint">click anywhere to shatter</span>
 
@@ -283,9 +289,10 @@ function draw() {
   });
 
   // Reveal home link at 60%
-  if (brokenCount / totalShards > .6) homeLink.classList.add("show");
-  // Disable canvas overlay at 85% so link is clickable
-  if (brokenCount / totalShards > .85) canvas.style.pointerEvents = "none";
+  if (brokenCount / totalShards > .6) {
+    homeLink.classList.add("show");
+    canvas.style.pointerEvents = "none";
+  }
 
   requestAnimationFrame(draw);
 }
