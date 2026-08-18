@@ -3,11 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rishit's Portfolio</title>
+  <title>Rishit Srivastava | Personal Website, Projects &amp; Writing</title>
+  <meta name="description" content="Visit the personal website of Rishit Srivastava, a student, competitive chess player, digital community manager, and cybersecurity learner. Explore his projects, writing, and interests at rishit.fun." />
+  <meta name="author" content="Rishit Srivastava" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="theme-color" content="#06050e" />
+  <link rel="canonical" href="https://rishit.fun/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://rishit.fun/" />
+  <meta property="og:title" content="Rishit Srivastava | Personal Website" />
+  <meta property="og:description" content="The personal website of Rishit Srivastava — student, competitive chess player, digital community manager, and cybersecurity learner." />
+  <meta property="og:image" content="https://cdn3.emoji.gg/emojis/7017-panda-exicted.png?v=2" />
+  <meta property="og:image:alt" content="Panda icon for Rishit Srivastava's website" />
+  <meta property="og:site_name" content="Rishit Srivastava" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@antipositional" />
+  <meta name="twitter:title" content="Rishit Srivastava | Personal Website" />
+  <meta name="twitter:description" content="The personal website of Rishit Srivastava — student, competitive chess player, digital community manager, and cybersecurity learner." />
+  <meta name="twitter:image" content="https://cdn3.emoji.gg/emojis/7017-panda-exicted.png?v=2" />
+  <meta name="twitter:image:alt" content="Panda icon for Rishit Srivastava's website" />
+
   <link rel="icon" type="image/png" href="https://cdn3.emoji.gg/emojis/7017-panda-exicted.png?v=2" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Rishit Srivastava",
+      "url": "https://rishit.fun/",
+      "description": "Student, competitive chess player, digital community manager, and cybersecurity learner.",
+      "sameAs": [
+        "https://www.youtube.com/@repudiating",
+        "https://github.com/flzzie",
+        "https://www.linkedin.com/in/rishitsrivastava01/",
+        "https://www.instagram.com/paleoanthropologist/",
+        "https://x.com/antipositional"
+      ],
+      "knowsAbout": [
+        "Chess",
+        "Business",
+        "Economics",
+        "Digital community management",
+        "Cybersecurity"
+      ]
+    }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -279,6 +327,15 @@
     .publish-btn:hover:not(:disabled) { opacity: .85; }
     .publish-btn:disabled { opacity: .4; cursor: not-allowed; }
 
+    /* Screen-reader only (SEO helper) */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    /* LinkedIn social button */
+    .social-btn.li { color: #0a66c2; border-color: rgba(10,102,194,.28); }
+
     /* Page visibility */
     .page { display: none; }
     .page.active { display: block; }
@@ -301,7 +358,7 @@
   <div class="bg-overlay"></div>
 
   <!-- Navbar -->
-  <nav class="topnav">
+  <nav class="topnav" aria-label="Primary navigation">
     <div class="topnav-left">
       <button class="pineapple-btn" id="pineappleBtn" aria-label="pineapple">
         <img src="https://cdn-icons-png.flaticon.com/512/661/661764.png" alt="pineapple" width="24" height="24" draggable="false" />
@@ -330,8 +387,8 @@
   <main class="main-content">
 
     <!-- About -->
-    <div class="page active fade-in" id="page-about">
-      <h1 class="hero-name">Rishit</h1>
+    <div class="page active fade-in" id="page-about" aria-labelledby="about-heading">
+      <h1 class="hero-name" id="about-heading">Rishit<span class="sr-only"> Srivastava</span></h1>
       <p class="hero-typed"><span id="typedText"></span><span class="cursor">|</span></p>
 
       <p class="hero-bio">
@@ -358,6 +415,10 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2.03c-3.34.72-4.04-1.6-4.04-1.6-.54-1.38-1.33-1.75-1.33-1.75-1.08-.74.08-.72.08-.72 1.2.08 1.83 1.23 1.83 1.23 1.06 1.82 2.8 1.3 3.48.99.1-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.23 1.9 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
           Github
         </a>
+        <a class="social-btn li" href="https://www.linkedin.com/in/rishitsrivastava01/" target="_blank" rel="noopener noreferrer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V8.99h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.29zM5.32 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM3.54 20.45H7.1V8.99H3.54v11.46z"/></svg>
+          LinkedIn
+        </a>
         <button class="social-btn dc" id="discordBtn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.37 3c-.21.38-.46.9-.63 1.3a18.27 18.27 0 0 0-5.48 0A13.6 13.6 0 0 0 8.62 3a19.73 19.73 0 0 0-4.96 1.38C.53 9.05-.32 13.6.1 18.1a19.9 19.9 0 0 0 6.07 3.07c.49-.67.93-1.38 1.3-2.13a13 13 0 0 1-2.04-.99l.5-.39a14.22 14.22 0 0 0 12.14 0l.5.39c-.65.38-1.33.72-2.04.99.37.75.8 1.46 1.3 2.13a19.84 19.84 0 0 0 6.07-3.07c.5-5.18-.85-9.68-3.58-13.73zM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.42s.95-2.43 2.15-2.43c1.2 0 2.17 1.09 2.15 2.43 0 1.34-.95 2.42-2.15 2.42zm7.96 0c-1.18 0-2.15-1.08-2.15-2.42s.95-2.43 2.15-2.43c1.2 0 2.17 1.09 2.15 2.43 0 1.34-.94 2.42-2.15 2.42z"/></svg>
           <span id="discordLabel">Discord</span>
@@ -374,12 +435,12 @@
     </div>
 
     <!-- Projects -->
-    <div class="page fade-in" id="page-projects">
-      <div class="section-label">Projects</div>
+    <div class="page fade-in" id="page-projects" aria-labelledby="projects-heading">
+      <h2 class="section-label" id="projects-heading">Projects</h2>
       <div class="proj-grid">
         <div class="proj-card glow-card">
           <div class="proj-img">
-            <img src="/watchtower.png" alt="Watchtower" style="height:90px;width:90px;object-fit:cover;border-radius:16px;" />
+            <img src="/watchtower.png" alt="Watchtower digital safety initiative logo" style="height:90px;width:90px;object-fit:cover;border-radius:16px;" />
           </div>
           <div class="proj-body">
             <div class="proj-name">Watchtower</div>
@@ -390,7 +451,7 @@
         </div>
         <div class="proj-card glow-card">
           <div class="proj-img">
-            <img src="/studysloth.png" alt="Studysloth" style="height:120px;width:auto;object-fit:contain;" />
+            <img src="/studysloth.png" alt="Studysloth educational ecosystem logo" style="height:120px;width:auto;object-fit:contain;" />
           </div>
           <div class="proj-body">
             <div class="proj-name">Studysloth</div>
@@ -401,7 +462,7 @@
         </div>
         <div class="proj-card glow-card">
           <div class="proj-img" style="overflow:hidden;">
-            <img src="/shieldvultus.png" alt="ShieldVultus" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:12px 12px 0 0;opacity:.92;" />
+            <img src="/shieldvultus.png" alt="ShieldVultus cybersecurity application logo" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:12px 12px 0 0;opacity:.92;" />
           </div>
           <div class="proj-body">
             <div class="proj-name">ShieldVultus</div>
@@ -414,11 +475,11 @@
     </div>
 
     <!-- Blogs -->
-    <div class="page fade-in" id="page-blogs">
-      <div class="section-label">
+    <div class="page fade-in" id="page-blogs" aria-labelledby="blogs-heading">
+      <h2 class="section-label" id="blogs-heading">
         Blogs
         <button class="inline-write-btn hidden" id="inlineWriteBtn">+ write</button>
-      </div>
+      </h2>
       <div id="blogContent"></div>
     </div>
 
@@ -441,6 +502,19 @@
   </div>
 
   <script>
+    // Basic anti-inspection deterrents. These only target context menus and
+    // common inspection/source shortcuts, leaving normal controls untouched.
+    document.addEventListener("contextmenu", event => event.preventDefault());
+    document.addEventListener("keydown", event => {
+      const modifier = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+      const blockedShortcut =
+        event.key === "F12" ||
+        (modifier && event.shiftKey && ["i", "j", "c"].includes(key)) ||
+        (modifier && key === "u");
+      if (blockedShortcut) event.preventDefault();
+    });
+
     // ── Data ──────────────────────────────────────────────────────────────────
     const TYPED_STRINGS = [
       "did you know that chess has more possible games than atoms in the universe",
