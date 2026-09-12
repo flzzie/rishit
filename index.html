@@ -267,10 +267,17 @@
     .blog-title { font-size: .98rem; font-weight: 700; color: #eef2ff; }
     .blog-date  { font-size: .72rem; color: #4d5e8a; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
     .blog-read-more {
-      display: inline-flex; align-items: center; gap: .3rem; margin-top: .55rem;
+      display: inline-flex; align-items: center; gap: .3rem;
       font-size: .78rem; font-weight: 600; color: #3692e7;
     }
     .blog-list-item:hover .blog-read-more { color: #5ba8ef; }
+    .blog-list-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: .55rem;
+    }
+    .blog-views {
+      font-size: .72rem; color: #4d5e8a; font-family: 'JetBrains Mono', monospace;
+    }
 
     /* Blog detail (full post view) */
     .blog-back {
@@ -591,6 +598,11 @@
     const GH_RAW_URL = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH}`;
     const GH_API_URL = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
 
+    // ── View counts (Cloudflare Worker + KV) ────────────────────────────────────
+    const WORKER_BASE = "https://visitorping.rishiitsrivastava.workers.dev";
+    const VIEW_ENDPOINT = `${WORKER_BASE}/view`;
+    const VIEWS_ENDPOINT = `${WORKER_BASE}/views`;
+
     function getStoredToken() {
       return sessionStorage.getItem("gh_pat") || "";
     }
@@ -694,6 +706,8 @@
     let posts = [];
     let postsLoaded = false;
     let blogBusy = false;
+    let viewCounts = {};
+    let viewCountsLoaded = false;
 
     // ── Clock ──────────────────────────────────────────────────────────────────
     function updateClock() {
@@ -809,10 +823,21 @@
       postsLoaded = true;
     }
 
+    async function loadViewCountsIfNeeded() {
+      if (viewCountsLoaded) return;
+      try {
+        const res = await fetch(`${VIEWS_ENDPOINT}?t=${Date.now()}`, { cache: "no-store" });
+        viewCounts = res.ok ? await res.json() : {};
+      } catch {
+        viewCounts = {};
+      }
+      viewCountsLoaded = true;
+    }
+
     async function renderBlogs() {
       const c = document.getElementById("blogContent");
       c.innerHTML = `<div class="blog-status">loading posts…</div>`;
-      await loadPostsIfNeeded();
+      await Promise.all([loadPostsIfNeeded(), loadViewCountsIfNeeded()]);
       paintBlogs();
     }
 
@@ -837,13 +862,17 @@
       const ordered = [...posts].sort((a, b) => (b.id || 0) - (a.id || 0));
       c.innerHTML = `<div class="blog-list">${ordered.map(p => {
         const slug = slugs.get(p.id);
+        const views = viewCounts[String(p.id)] || 0;
         return `
         <div class="blog-list-item glow-card" onclick="openBlogDetail('${slug}')">
           <div class="blog-list-header">
             <span class="blog-title">${esc(p.title)}</span>
             <span class="blog-date">${esc(p.date || "")}</span>
           </div>
-          <span class="blog-read-more">Read post →</span>
+          <div class="blog-list-footer">
+            <span class="blog-views">${views} view${views === 1 ? "" : "s"}</span>
+            <span class="blog-read-more">Read post →</span>
+          </div>
         </div>`;
       }).join("")}</div>`;
     }
@@ -852,10 +881,11 @@
       // full post view: replaces the list, comfortable width and type,
       // closes only via the explicit back link (never by clicking the text).
       const c = document.getElementById("blogContent");
+      const currentViews = viewCounts[String(post.id)] || 0;
       c.innerHTML = `
         <button class="blog-back" onclick="closeBlogDetail()">← back to blogs</button>
         <h3 class="blog-detail-title">${esc(post.title)}</h3>
-        <span class="blog-detail-date">${esc(post.date || "")}</span>
+        <span class="blog-detail-date">${esc(post.date || "")} · <span id="viewCountDetail">${currentViews}</span> view${currentViews === 1 ? "" : "s"}</span>
         <div class="blog-detail-body">${esc(post.body)}</div>
         ${(post.images && post.images.length) ? `
         <div class="blog-slideshow" data-images='${JSON.stringify(post.images).replace(/'/g, "&#39;")}'>
@@ -869,6 +899,27 @@
       initSlideshows();
       history.replaceState(null, "", `#${slug}`);
       window.scrollTo({ top: 0, behavior: "instant" });
+      registerView(post.id);
+    }
+
+    function registerView(id) {
+      // Only count once per tab/session per post, same guard style as the
+      // visitor ping, so refreshing a post doesn't inflate its count.
+      const key = `viewed:${id}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+
+      fetch(`${VIEW_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: "POST" })
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => {
+          if (!data) return;
+          viewCounts[String(id)] = data.count;
+          const el = document.getElementById("viewCountDetail");
+          if (el) el.textContent = data.count;
+        })
+        .catch(() => {
+          /* Never let this break the page — swallow all errors. */
+        });
     }
 
     function openBlogDetail(slug) {
@@ -899,7 +950,7 @@
       if (!match) return;
       const slug = match[1];
       showPage("blogs");
-      await loadPostsIfNeeded();
+      await Promise.all([loadPostsIfNeeded(), loadViewCountsIfNeeded()]);
       openBlogDetail(slug);
     }
     openPostFromHash();
@@ -1037,7 +1088,7 @@
     // Visitor ping — calls your Cloudflare Worker (which holds the real
     // Discord webhook URL as a server-side secret). Fires once per tab.
     (function () {
-      const PING_ENDPOINT = "https://visitorping.rishiitsrivastava.workers.dev/";
+      const PING_ENDPOINT = "https://visitorping.rishiitsrivastava.workers.dev/visit";
 
       if (sessionStorage.getItem("visit_logged")) return;
       sessionStorage.setItem("visit_logged", "1");
