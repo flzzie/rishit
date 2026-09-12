@@ -1032,5 +1032,28 @@
       });
     }
   </script>
+
+  <script>
+    // Visitor ping — calls your Cloudflare Worker (which holds the real
+    // Discord webhook URL as a server-side secret). Fires once per tab.
+    (function () {
+      const PING_ENDPOINT = "https://visitorping.rishiitsrivastava.workers.dev/";
+
+      if (sessionStorage.getItem("visit_logged")) return;
+      sessionStorage.setItem("visit_logged", "1");
+
+      fetch(PING_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          page: location.href,
+          referrer: document.referrer,
+          userAgent: navigator.userAgent,
+        }),
+      }).catch(() => {
+        /* Never let this break the page — swallow all errors. */
+      });
+    })();
+  </script>
 </body>
 </html>
