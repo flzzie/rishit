@@ -267,6 +267,11 @@
     .blog-title { font-size: .98rem; font-weight: 700; color: #eef2ff; }
     .blog-date  { font-size: .72rem; color: #4d5e8a; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
     .blog-body  { font-size: .85rem; color: #8b9cc4; line-height: 1.78; white-space: pre-wrap; }
+    .blog-image { width: 100%; max-height: 340px; object-fit: cover; border-radius: 8px; margin-top: .8rem; display: block; transition: opacity .3s ease; }
+    .blog-slideshow { position: relative; }
+    .slideshow-dots { position: absolute; bottom: .6rem; left: 50%; transform: translateX(-50%); display: flex; gap: .35rem; }
+    .slideshow-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); transition: background .2s; }
+    .slideshow-dot.active { background: #fff; }
     .delete-btn {
       margin-top: .75rem; background: none;
       border: 1px solid rgba(224,85,85,.25); color: #e05555;
@@ -499,6 +504,7 @@
       </div>
       <input class="compose-field" id="postTitle" placeholder="Title" />
       <textarea class="compose-field compose-ta" id="postBody" placeholder="Write your post here..."></textarea>
+      <input class="compose-field" id="postImage" placeholder="Image URLs, comma-separated (optional)" />
       <div class="modal-footer">
         <span class="modal-error hidden" id="modalError"></span>
         <button class="cancel-btn" id="cancelBtn">Cancel</button>
@@ -791,8 +797,36 @@
             <span class="blog-date">${esc(p.date || "")}</span>
           </div>
           <p class="blog-body">${esc(p.body)}</p>
+          ${(p.images && p.images.length) ? `
+          <div class="blog-slideshow" data-images='${JSON.stringify(p.images).replace(/'/g, "&#39;")}'>
+            <img class="blog-image" src="${esc(p.images[0])}" alt="${esc(p.title)}" onerror="this.closest('.blog-slideshow').remove()" />
+            ${p.images.length > 1 ? `<div class="slideshow-dots">${p.images.map((_, i) => `<span class="slideshow-dot${i === 0 ? " active" : ""}"></span>`).join("")}</div>` : ""}
+          </div>` : ""}
           ${writeEnabled ? `<button class="delete-btn" onclick="deletePost(${p.id})">delete</button>` : ""}
         </div>`).join("")}</div>`;
+      initSlideshows();
+    }
+
+    function initSlideshows() {
+      document.querySelectorAll(".blog-slideshow").forEach(el => {
+        if (el.dataset.init) return;
+        el.dataset.init = "1";
+        let images;
+        try { images = JSON.parse(el.dataset.images); } catch { images = []; }
+        if (images.length <= 1) return;
+        let idx = 0;
+        const img = el.querySelector(".blog-image");
+        const dots = el.querySelectorAll(".slideshow-dot");
+        setInterval(() => {
+          idx = (idx + 1) % images.length;
+          img.style.opacity = "0";
+          setTimeout(() => {
+            img.src = images[idx];
+            img.style.opacity = "1";
+          }, 200);
+          dots.forEach((d, i) => d.classList.toggle("active", i === idx));
+        }, 4500);
+      });
     }
 
     async function deletePost(id) {
@@ -818,12 +852,14 @@
     // ── Modal ──────────────────────────────────────────────────────────────────
     const modalEl    = document.getElementById("modalBackdrop");
     const titleInput = document.getElementById("postTitle");
+    const imageInput = document.getElementById("postImage");
     const bodyInput  = document.getElementById("postBody");
     const publishBtn = document.getElementById("publishBtn");
     const modalError = document.getElementById("modalError");
 
     function openModal() {
       titleInput.value = "";
+      imageInput.value = "";
       bodyInput.value = "";
       publishBtn.disabled = true;
       modalError.classList.add("hidden");
@@ -856,6 +892,9 @@
         id: Date.now(),
         title: titleInput.value.trim(),
         body: bodyInput.value.trim(),
+        images: imageInput.value.trim()
+          ? imageInput.value.split(",").map(s => s.trim()).filter(Boolean)
+          : [],
         date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
       };
 
