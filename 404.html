@@ -109,6 +109,12 @@ const homeLink = document.getElementById("homeLink");
 let W, H, shards = [], cracks = [], totalShards = 0, brokenCount = 0;
 let audioCtx = null, hintGone = false;
 
+// Endless-loop controls
+let clickCount = 0;
+const CLICKS_TO_REVEAL_HOME = 4;   // home link appears after this many clicks
+const REBUILD_THRESHOLD = 0.85;    // rebuild fresh glass once this much is broken
+let rebuilding = false;
+
 // ── Resize & build ───────────────────────────────────────────────────────────
 function resize() {
   W = canvas.width  = window.innerWidth;
@@ -164,6 +170,15 @@ function makeShard(pts) {
     dx: 0, dy: 0, vx: 0, vy: 0, angle: 0, va: 0, alpha: 1,
     glint: .03 + Math.random() * .05,
   };
+}
+
+// ── Rebuild a fresh pane (keeps the loop endless) ─────────────────────────────
+function rebuildGlass() {
+  rebuilding = true;
+  // fade cracks out with the old shards, then reset everything
+  shards = []; cracks = []; brokenCount = 0;
+  buildGlass();
+  rebuilding = false;
 }
 
 // ── Crack lines ───────────────────────────────────────────────────────────────
@@ -288,22 +303,28 @@ function draw() {
     ctx.restore();
   });
 
-  // Reveal home link at 60%
-  if (brokenCount / totalShards > .6) {
-    homeLink.classList.add("show");
-    canvas.style.pointerEvents = "none";
+  // Once most of the pane is gone, quietly regrow a fresh one so play never ends
+  if (!rebuilding && totalShards > 0 && brokenCount / totalShards > REBUILD_THRESHOLD) {
+    rebuildGlass();
   }
 
   requestAnimationFrame(draw);
 }
 
-// ── Click ─────────────────────────────────────────────────────────────────────
-canvas.addEventListener("click", e => {
+// ── Shared click handling ─────────────────────────────────────────────────────
+function handleHit(x, y) {
   if (!hintGone) { hintGone = true; hint.classList.add("gone"); }
 
+  clickCount++;
   playGlass();
-  addCrack(e.clientX, e.clientY);
-  shatterNear(e.clientX, e.clientY);
+  addCrack(x, y);
+  shatterNear(x, y);
+
+  // Reveal the home link after a handful of clicks, but keep the canvas
+  // interactive so people can keep shattering glass forever.
+  if (clickCount >= CLICKS_TO_REVEAL_HOME) {
+    homeLink.classList.add("show");
+  }
 
   // Brief white flash
   ctx.save();
@@ -311,17 +332,15 @@ canvas.addEventListener("click", e => {
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, W, H);
   ctx.restore();
-});
+}
+
+// ── Click ─────────────────────────────────────────────────────────────────────
+canvas.addEventListener("click", e => handleHit(e.clientX, e.clientY));
 
 // ── Touch support ─────────────────────────────────────────────────────────────
 canvas.addEventListener("touchstart", e => {
   e.preventDefault();
-  Array.from(e.changedTouches).forEach(t => {
-    if (!hintGone) { hintGone = true; hint.classList.add("gone"); }
-    playGlass();
-    addCrack(t.clientX, t.clientY);
-    shatterNear(t.clientX, t.clientY);
-  });
+  Array.from(e.changedTouches).forEach(t => handleHit(t.clientX, t.clientY));
 }, { passive: false });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
