@@ -274,6 +274,10 @@
       font-size: .72rem; cursor: pointer; transition: background .14s;
     }
     .delete-btn:hover { background: rgba(224,85,85,.12); }
+    .blog-status {
+      font-size: .72rem; color: #4d5e8a; font-family: 'JetBrains Mono', monospace;
+      margin-bottom: .875rem;
+    }
 
     /* Achievements */
     .ach-grid { display: flex; flex-direction: column; gap: .6rem; }
@@ -311,7 +315,8 @@
     .compose-field::placeholder { color: #4d5e8a; }
     .compose-field:focus { border-color: rgba(54,146,231,.55); }
     .compose-ta { min-height: 140px; resize: vertical; line-height: 1.7; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: .6rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: .6rem; align-items: center; }
+    .modal-error { font-size: .78rem; color: #e05555; margin-right: auto; }
     .cancel-btn {
       background: none; border: 1px solid rgba(110,70,190,.25);
       color: #8b9cc4; border-radius: 7px; padding: .4rem .9rem;
@@ -495,6 +500,7 @@
       <input class="compose-field" id="postTitle" placeholder="Title" />
       <textarea class="compose-field compose-ta" id="postBody" placeholder="Write your post here..."></textarea>
       <div class="modal-footer">
+        <span class="modal-error hidden" id="modalError"></span>
         <button class="cancel-btn" id="cancelBtn">Cancel</button>
         <button class="publish-btn" id="publishBtn" disabled>Publish →</button>
       </div>
@@ -529,17 +535,125 @@
       "did you know that the eiffel tower can grow taller in summer due to heat expansion",
     ];
 
+    // ── GitHub-backed blog storage ──────────────────────────────────────────────
+    // Reading posts.json works for every visitor with no auth (public repo).
+    // Writing (publish/delete) only happens when you've unlocked "write mode"
+    // via the pineapple easter egg, and requires a GitHub Personal Access Token
+    // (fine-grained, with "Contents: read and write" on this repo only).
+    // The token is entered via a prompt and kept ONLY in sessionStorage for
+    // this browser tab — it is never written into the HTML/JS source, never
+    // committed, and disappears when you close the tab.
+    const GH_OWNER  = "flzzie";
+    const GH_REPO   = "rishit";
+    const GH_BRANCH = "main";
+    const GH_PATH   = "posts.json";
+    // Cache-busted raw URL so readers always see the latest committed posts.
+    const GH_RAW_URL = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH}`;
+    const GH_API_URL = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+
+    function getStoredToken() {
+      return sessionStorage.getItem("gh_pat") || "";
+    }
+    function setStoredToken(t) {
+      sessionStorage.setItem("gh_pat", t);
+    }
+    function ensureToken() {
+      let t = getStoredToken();
+      if (t) return t;
+      t = window.prompt(
+        "Paste a GitHub Personal Access Token with write access to " +
+        `${GH_OWNER}/${GH_REPO} (Contents: read & write).\n\n` +
+        "This is stored only in this browser tab (sessionStorage) — never saved to the site."
+      );
+      if (t) setStoredToken(t.trim());
+      return t ? t.trim() : "";
+    }
+    function clearStoredToken() {
+      sessionStorage.removeItem("gh_pat");
+    }
+
+    // UTF-8 safe base64 helpers (GitHub Contents API expects base64 content)
+    function utf8ToB64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+    function b64ToUtf8(b64) {
+      return decodeURIComponent(escape(atob(b64)));
+    }
+
+    async function fetchPostsPublic() {
+      // No auth — works for all visitors. Bust cache so new posts show promptly.
+      const res = await fetch(`${GH_RAW_URL}?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return [];
+      try {
+        const data = await res.json();
+        return Array.isArray(data) ? data : (Array.isArray(data.posts) ? data.posts : []);
+      } catch {
+        return [];
+      }
+    }
+
+    async function fetchPostsForWrite(token) {
+      // Authenticated read via the Contents API so we get the file's current
+      // sha (required to commit an update) alongside its content.
+      const res = await fetch(GH_API_URL + `?ref=${GH_BRANCH}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+        },
+      });
+      if (res.status === 401 || res.status === 403) {
+        throw new Error("Token rejected — check it has Contents read/write access to this repo.");
+      }
+      if (res.status === 404) {
+        return { posts: [], sha: null };
+      }
+      if (!res.ok) throw new Error(`GitHub read failed (${res.status})`);
+      const file = await res.json();
+      let posts = [];
+      try {
+        const decoded = b64ToUtf8(file.content.replace(/\n/g, ""));
+        const parsed = JSON.parse(decoded);
+        posts = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.posts) ? parsed.posts : []);
+      } catch {
+        posts = [];
+      }
+      return { posts, sha: file.sha };
+    }
+
+    async function commitPosts(posts, sha, message, token) {
+      const body = {
+        message,
+        content: utf8ToB64(JSON.stringify(posts, null, 2)),
+        branch: GH_BRANCH,
+      };
+      if (sha) body.sha = sha;
+      const res = await fetch(GH_API_URL, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (res.status === 401 || res.status === 403) {
+        throw new Error("Token rejected — check it has Contents read/write access to this repo.");
+      }
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`GitHub commit failed (${res.status}) ${errText}`);
+      }
+      return res.json();
+    }
+
     // ── State ─────────────────────────────────────────────────────────────────
     let currentPage = "about";
     let writeEnabled = false;
     let pineappleSpins = 0;
     let spinResetTimer = null;
     let posts = [];
-
-    try { posts = JSON.parse(localStorage.getItem("rishit_posts") || "[]"); } catch {}
-    function savePosts() {
-      try { localStorage.setItem("rishit_posts", JSON.stringify(posts)); } catch {}
-    }
+    let postsLoaded = false;
+    let blogBusy = false;
 
     // ── Clock ──────────────────────────────────────────────────────────────────
     function updateClock() {
@@ -649,27 +763,56 @@
       return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
 
-    function renderBlogs() {
+    async function loadPostsIfNeeded() {
+      if (postsLoaded) return;
+      posts = await fetchPostsPublic();
+      postsLoaded = true;
+    }
+
+    async function renderBlogs() {
+      const c = document.getElementById("blogContent");
+      c.innerHTML = `<div class="blog-status">loading posts…</div>`;
+      await loadPostsIfNeeded();
+      paintBlogs();
+    }
+
+    function paintBlogs() {
       const c = document.getElementById("blogContent");
       if (!posts.length) {
         c.innerHTML = `<div class="empty-state"><p>No posts yet.</p></div>`;
         return;
       }
-      c.innerHTML = `<div class="blog-list">${posts.map(p => `
+      // newest first
+      const ordered = [...posts].sort((a, b) => (b.id || 0) - (a.id || 0));
+      c.innerHTML = `<div class="blog-list">${ordered.map(p => `
         <div class="blog-card glow-card">
           <div class="blog-header">
             <span class="blog-title">${esc(p.title)}</span>
-            <span class="blog-date">${p.date}</span>
+            <span class="blog-date">${esc(p.date || "")}</span>
           </div>
           <p class="blog-body">${esc(p.body)}</p>
           ${writeEnabled ? `<button class="delete-btn" onclick="deletePost(${p.id})">delete</button>` : ""}
         </div>`).join("")}</div>`;
     }
 
-    function deletePost(id) {
-      posts = posts.filter(p => p.id !== id);
-      savePosts();
-      renderBlogs();
+    async function deletePost(id) {
+      if (blogBusy) return;
+      if (!window.confirm("Delete this post? This commits to the repo immediately.")) return;
+      const token = ensureToken();
+      if (!token) return;
+      blogBusy = true;
+      const c = document.getElementById("blogContent");
+      try {
+        const { posts: remotePosts, sha } = await fetchPostsForWrite(token);
+        const next = remotePosts.filter(p => p.id !== id);
+        await commitPosts(next, sha, `Delete post ${id}`, token);
+        posts = next;
+        paintBlogs();
+      } catch (err) {
+        alert("Couldn't delete post: " + err.message);
+      } finally {
+        blogBusy = false;
+      }
     }
 
     // ── Modal ──────────────────────────────────────────────────────────────────
@@ -677,11 +820,14 @@
     const titleInput = document.getElementById("postTitle");
     const bodyInput  = document.getElementById("postBody");
     const publishBtn = document.getElementById("publishBtn");
+    const modalError = document.getElementById("modalError");
 
     function openModal() {
       titleInput.value = "";
       bodyInput.value = "";
       publishBtn.disabled = true;
+      modalError.classList.add("hidden");
+      modalError.textContent = "";
       modalEl.classList.remove("hidden");
     }
     function closeModal() { modalEl.classList.add("hidden"); }
@@ -696,17 +842,39 @@
     titleInput.addEventListener("input", checkPublish);
     bodyInput.addEventListener("input", checkPublish);
 
-    publishBtn.addEventListener("click", () => {
-      if (!titleInput.value.trim() || !bodyInput.value.trim()) return;
-      posts.unshift({
+    publishBtn.addEventListener("click", async () => {
+      if (!titleInput.value.trim() || !bodyInput.value.trim() || blogBusy) return;
+      const token = ensureToken();
+      if (!token) return;
+
+      blogBusy = true;
+      publishBtn.disabled = true;
+      publishBtn.textContent = "Publishing…";
+      modalError.classList.add("hidden");
+
+      const newPost = {
         id: Date.now(),
         title: titleInput.value.trim(),
         body: bodyInput.value.trim(),
         date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
-      });
-      savePosts();
-      closeModal();
-      showPage("blogs");
+      };
+
+      try {
+        const { posts: remotePosts, sha } = await fetchPostsForWrite(token);
+        const next = [newPost, ...remotePosts];
+        await commitPosts(next, sha, `Add post: ${newPost.title}`, token);
+        posts = next;
+        postsLoaded = true;
+        closeModal();
+        showPage("blogs");
+      } catch (err) {
+        modalError.textContent = err.message;
+        modalError.classList.remove("hidden");
+      } finally {
+        blogBusy = false;
+        publishBtn.textContent = "Publish →";
+        checkPublish();
+      }
     });
 
     // Expand/collapse project descriptions
