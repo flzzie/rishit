@@ -262,16 +262,28 @@
     .empty-state p { color: #4d5e8a; font-size: .9rem; }
 
     .blog-list { display: flex; flex-direction: column; gap: .875rem; }
-    .blog-card { padding: 1.25rem 1.4rem; }
-    .blog-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .6rem; }
+    .blog-card { padding: 1.25rem 1.4rem; cursor: pointer; }
+    .blog-card.expanded { cursor: default; }
+    .blog-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+    .blog-card.expanded .blog-header { margin-bottom: .6rem; }
     .blog-title { font-size: .98rem; font-weight: 700; color: #eef2ff; }
     .blog-date  { font-size: .72rem; color: #4d5e8a; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-    .blog-body  { font-size: .85rem; color: #8b9cc4; line-height: 1.78; white-space: pre-wrap; }
+    .blog-body  { font-size: .85rem; color: #8b9cc4; line-height: 1.78; white-space: pre-wrap; display: none; }
+    .blog-card.expanded .blog-body { display: block; }
     .blog-image { width: 100%; max-height: 340px; object-fit: cover; border-radius: 8px; margin-top: .8rem; display: block; transition: opacity .3s ease; }
-    .blog-slideshow { position: relative; }
+    .blog-slideshow { position: relative; display: none; }
+    .blog-card.expanded .blog-slideshow { display: block; }
     .slideshow-dots { position: absolute; bottom: .6rem; left: 50%; transform: translateX(-50%); display: flex; gap: .35rem; }
     .slideshow-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); transition: background .2s; }
     .slideshow-dot.active { background: #fff; }
+    .share-btn {
+      display: none; margin-top: .75rem; background: none;
+      border: 1px solid rgba(54,146,231,.3); color: #3692e7;
+      border-radius: 5px; padding: .18rem .55rem;
+      font-size: .72rem; cursor: pointer; transition: background .14s;
+    }
+    .share-btn:hover { background: rgba(54,146,231,.12); }
+    .blog-card.expanded .share-btn { display: inline-block; }
     .delete-btn {
       margin-top: .75rem; background: none;
       border: 1px solid rgba(224,85,85,.25); color: #e05555;
@@ -782,16 +794,29 @@
       paintBlogs();
     }
 
+    function slugMap() {
+      // oldest post = Blog1, next = Blog2, etc. — computed fresh every time
+      // so it works for posts published before slugs existed, with zero
+      // changes needed to posts.json.
+      const chronological = [...posts].sort((a, b) => (a.id || 0) - (b.id || 0));
+      const map = new Map();
+      chronological.forEach((p, i) => map.set(p.id, `Blog${i + 1}`));
+      return map;
+    }
+
     function paintBlogs() {
       const c = document.getElementById("blogContent");
       if (!posts.length) {
         c.innerHTML = `<div class="empty-state"><p>No posts yet.</p></div>`;
         return;
       }
+      const slugs = slugMap();
       // newest first
       const ordered = [...posts].sort((a, b) => (b.id || 0) - (a.id || 0));
-      c.innerHTML = `<div class="blog-list">${ordered.map(p => `
-        <div class="blog-card glow-card">
+      c.innerHTML = `<div class="blog-list">${ordered.map(p => {
+        const slug = slugs.get(p.id);
+        return `
+        <div class="blog-card glow-card" data-post-id="${p.id}" data-slug="${slug}" onclick="toggleBlogCard(event, ${p.id}, '${slug}')">
           <div class="blog-header">
             <span class="blog-title">${esc(p.title)}</span>
             <span class="blog-date">${esc(p.date || "")}</span>
@@ -802,10 +827,58 @@
             <img class="blog-image" src="${esc(p.images[0])}" alt="${esc(p.title)}" onerror="this.closest('.blog-slideshow').remove()" />
             ${p.images.length > 1 ? `<div class="slideshow-dots">${p.images.map((_, i) => `<span class="slideshow-dot${i === 0 ? " active" : ""}"></span>`).join("")}</div>` : ""}
           </div>` : ""}
-          ${writeEnabled ? `<button class="delete-btn" onclick="deletePost(${p.id})">delete</button>` : ""}
-        </div>`).join("")}</div>`;
+          ${writeEnabled ? `<button class="delete-btn" onclick="event.stopPropagation(); deletePost(${p.id})">delete</button>` : ""}
+          <button class="share-btn" onclick="event.stopPropagation(); sharePost(event, '${slug}')">copy link</button>
+        </div>`;
+      }).join("")}</div>`;
       initSlideshows();
     }
+
+    function toggleBlogCard(event, id, slug) {
+      const card = event.currentTarget;
+      const wasExpanded = card.classList.contains("expanded");
+      // collapse any other open card first (accordion behavior)
+      document.querySelectorAll(".blog-card.expanded").forEach(el => {
+        if (el !== card) el.classList.remove("expanded");
+      });
+      card.classList.toggle("expanded", !wasExpanded);
+      if (!wasExpanded) {
+        initSlideshows();
+        history.replaceState(null, "", `#${slug}`);
+      } else {
+        history.replaceState(null, "", location.pathname);
+      }
+    }
+
+    function sharePost(event, slug) {
+      const url = `${location.origin}${location.pathname}#${slug}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = event.currentTarget;
+        const original = btn.textContent;
+        btn.textContent = "copied!";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      }).catch(() => {
+        window.prompt("Copy this link:", url);
+      });
+    }
+
+    async function openPostFromHash() {
+      const match = location.hash.match(/^#(Blog\d+)$/i);
+      if (!match) return;
+      const slug = match[1];
+      showPage("blogs");
+      await loadPostsIfNeeded();
+      paintBlogs();
+      requestAnimationFrame(() => {
+        const card = document.querySelector(`.blog-card[data-slug="${slug}"]`);
+        if (card) {
+          card.classList.add("expanded");
+          initSlideshows();
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+    openPostFromHash();
 
     function initSlideshows() {
       document.querySelectorAll(".blog-slideshow").forEach(el => {
@@ -825,7 +898,7 @@
             img.style.opacity = "1";
           }, 200);
           dots.forEach((d, i) => d.classList.toggle("active", i === idx));
-        }, 4500);
+        }, 3000);
       });
     }
 
