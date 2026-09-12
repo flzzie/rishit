@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": 1789200197674,
+    "title": "I Was Looking for His Full Name. I Found His Full Address Instead.",
+    "body": "This started off pretty normal. I was just curious to know my friend's full name, so I visited his state chess association's website to check. And yes, I found it there! But that was not the only thing I found. ... Along with his name, I found his phone number and email, completely visible to anyone. And it was not just him. It was the case for every player registered under that state chess association.\n\nThat made me think, are all government sports websites like this? So over the next three to four months, I started checking other state sports association websites too. I was genuinely surprised by how many of them had personal information sitting right there for anyone to find. Thankfully, most of them were not as easy to notice as the first one. But anyone even a little familiar with how websites work could find it without much effort, and there it was again, phone numbers and email addresses, and in some cases even home addresses and birth certificates.\n\nNow came the interesting website, the one which really blew my mind. Like, how is this even possible?? Same as the other sites, nothing was sitting openly on the page. But this time it was not just a phone number or an email. It was Aadhaar cards, home address and birth certificates. Aadhaar is basically someone's entire identity in India, tied to their bank account and to pretty much every government service there is. This was not a small mistake anymore.\n\nBy then, I had seen enough to know I needed to do something about all of it, not just this one site. Over that same stretch of months, I ended up reporting all nine sites, one by one, directly to the concerned organization as I found them. Honestly, it left me with a mix of feelings. Three of them fixed the issue but never said a word to me about it, which felt kind of deflating after putting in the effort. Out of the remaining six, two organizations, a state chess association and a state badminton association, actually took the time to appreciate what I had done. For two others, including the Aadhaar one, I could not find a proper way to contact the organization directly, and given how serious it was, I decided to report those straight to CERT-In, India's national cybersecurity response team. It took about two months, but I eventually got an official email back, acknowledging the disclosure and thanking me for reporting responsibly. It was probably the best part of this whole thing!",
+    "images": [
+      "https://raw.githubusercontent.com/flzzie/rishit/refs/heads/main/Image1.png",
+      "https://raw.githubusercontent.com/flzzie/rishit/refs/heads/main/Image2.png",
+      "https://raw.githubusercontent.com/flzzie/rishit/refs/heads/main/Image3.png",
+      "https://raw.githubusercontent.com/flzzie/rishit/refs/heads/main/Image4.png"
+    ],
+    "date": "September 12, 2026"
+  }
+]
