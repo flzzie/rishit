@@ -2,7 +2,7 @@
 """
 Builds real, crawlable pages for every blog post in posts.json.
 
-  blog/<slug>/index.html   one page per post  ->  https://rishit.fun/blog/<slug>/
+  blog/<number>/index.html one page per post  ->  https://rishit.fun/blog/<number>/
   sitemap.xml              home page + every post
   robots.txt               points crawlers at the sitemap
 
@@ -17,7 +17,6 @@ import html
 import json
 import re
 import shutil
-import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,33 +26,13 @@ AUTHOR = "Rishit Srivastava"
 
 
 # --------------------------------------------------------------------------
-# Slugs. This logic is mirrored in index.html (slugify / slugMap) so the links
-# in the blog list always point at the pages built here. Keep them in sync.
+# Short numbered addresses: the oldest post is /blog/1/, the next /blog/2/, ...
+# This logic is mirrored in index.html (slugMap) so the links in the blog list
+# always point at the pages built here. Keep them in sync.
 # --------------------------------------------------------------------------
-def slugify(title):
-    s = unicodedata.normalize("NFKD", str(title or "").lower())
-    s = re.sub(r"[̀-ͯ]", "", s)
-    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
-    if len(s) > 60:
-        s = s[:60]
-        i = s.rfind("-")
-        if i > 30:
-            s = s[:i]
-        s = s.rstrip("-")
-    return s or "post"
-
-
 def slug_map(posts):
-    """oldest post first; a repeated title gets its id appended."""
-    seen = set()
-    out = {}
-    for p in sorted(posts, key=lambda p: p.get("id") or 0):
-        slug = slugify(p.get("title"))
-        if slug in seen:
-            slug = f"{slug}-{p.get('id')}"
-        seen.add(slug)
-        out[p.get("id")] = slug
-    return out
+    ordered = sorted(posts, key=lambda p: p.get("id") or 0)
+    return {p.get("id"): str(i + 1) for i, p in enumerate(ordered)}
 
 
 def esc(s):
