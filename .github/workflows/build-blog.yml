@@ -1,0 +1,40 @@
+name: Build blog pages
+
+# Rebuilds /blog/<slug>/ pages, sitemap.xml and robots.txt whenever a post is
+# published or deleted (the site commits to posts.json), or this script changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - posts.json
+      - build_blog.py
+      - index.html
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Generate pages
+        run: python3 build_blog.py
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A blog sitemap.xml robots.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Build blog pages"
+            git push
+          fi

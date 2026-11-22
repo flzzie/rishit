@@ -246,6 +246,12 @@
     .proj-expand.visible { display: flex; }
     .proj-expand svg { transition: transform .3s ease; flex-shrink: 0; }
     .proj-expand.open svg { transform: rotate(180deg); }
+    .proj-link {
+      display: inline-flex; align-items: center; width: fit-content; margin-top: .6rem;
+      color: #3692e7; font-size: .78rem; font-weight: 600; text-decoration: none;
+      transition: color .15s;
+    }
+    .proj-link:hover { color: #5ba8ef; }
 
     /* Blogs */
     .inline-write-btn {
@@ -262,7 +268,7 @@
 
     /* Blog list (collapsed) */
     .blog-list { display: flex; flex-direction: column; gap: .875rem; }
-    .blog-list-item { padding: 1.1rem 1.4rem; cursor: pointer; }
+    .blog-list-item { padding: 1.1rem 1.4rem; cursor: pointer; display: block; text-decoration: none; color: inherit; }
     .blog-list-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
     .blog-title { font-size: .98rem; font-weight: 700; color: #eef2ff; }
     .blog-date  { font-size: .72rem; color: #4d5e8a; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
@@ -489,6 +495,18 @@
     <div class="page fade-in" id="page-projects" aria-labelledby="projects-heading">
       <h2 class="section-label" id="projects-heading">Projects</h2>
       <div class="proj-grid">
+        <div class="proj-card glow-card">
+          <div class="proj-img">
+            <span class="proj-icon" role="img" aria-label="Chess pawn" style="font-size:3.4rem;">♟️</span>
+          </div>
+          <div class="proj-body">
+            <div class="proj-name">Pawniac</div>
+            <div class="proj-sub" style="color:#f0a8c4">Chess Variants Platform ♟️</div>
+            <p class="proj-desc">Built Pawniac, a free and ad-free chess website centered on chess variants. Alongside standard chess, it offers Hand and Brain, Piece Auction, and Double Move, giving players new ways to enjoy the game beyond the usual format. It also includes a bot to practice against, a game analyzer that explains moves in a coaching style, minigames, an openings quiz, leaderboards, and achievements.</p>
+            <button class="proj-expand" aria-label="expand description">read more <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <a class="proj-link" href="https://pawniac.fun" target="_blank" rel="noopener noreferrer">pawniac.fun ↗</a>
+          </div>
+        </div>
         <div class="proj-card glow-card">
           <div class="proj-img">
             <img src="/watchtower.png" alt="Watchtower digital safety initiative logo" style="height:90px;width:90px;object-fit:cover;border-radius:16px;" />
@@ -841,18 +859,36 @@
       paintBlogs();
     }
 
+    // Every post lives at /blog/<slug>/ (built by build_blog.py from posts.json).
+    // slugify / slugMap must stay identical to slugify / slug_map in build_blog.py.
+    function slugify(title) {
+      let s = String(title || "").toLowerCase().normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      if (s.length > 60) {
+        s = s.slice(0, 60);
+        const i = s.lastIndexOf("-");
+        if (i > 30) s = s.slice(0, i);
+        s = s.replace(/-+$/, "");
+      }
+      return s || "post";
+    }
+
     function slugMap() {
-      // oldest post = Blog1, next = Blog2, etc. — computed fresh every time
-      // so it works for posts published before slugs existed, with zero
-      // changes needed to posts.json.
+      // oldest post first; a repeated title gets its id appended
       const chronological = [...posts].sort((a, b) => (a.id || 0) - (b.id || 0));
+      const seen = new Set();
       const map = new Map();
-      chronological.forEach((p, i) => map.set(p.id, `Blog${i + 1}`));
+      chronological.forEach(p => {
+        let slug = slugify(p.title);
+        if (seen.has(slug)) slug = `${slug}-${p.id}`;
+        seen.add(slug);
+        map.set(p.id, slug);
+      });
       return map;
     }
 
     function paintBlogs() {
-      // list view: title, date, and a clear "Read post" affordance.
+      // list view: title, date, and a real link to each post's own page.
       const c = document.getElementById("blogContent");
       if (!posts.length) {
         c.innerHTML = `<div class="empty-state"><p>No posts yet.</p></div>`;
@@ -864,118 +900,40 @@
         const slug = slugs.get(p.id);
         const views = viewCounts[String(p.id)] || 0;
         return `
-        <div class="blog-list-item glow-card" onclick="openBlogDetail('${slug}')">
+        <a class="blog-list-item glow-card" href="/blog/${slug}/">
           <div class="blog-list-header">
             <span class="blog-title">${esc(p.title)}</span>
             <span class="blog-date">${esc(p.date || "")}</span>
           </div>
           <div class="blog-list-footer">
             <span class="blog-views">${views} view${views === 1 ? "" : "s"}</span>
+            ${writeEnabled ? `<button class="delete-btn" onclick="event.preventDefault(); event.stopPropagation(); deletePost(${p.id})">delete</button>` : ""}
             <span class="blog-read-more">Read post →</span>
           </div>
-        </div>`;
+        </a>`;
       }).join("")}</div>`;
     }
 
-    function renderBlogDetail(post, slug) {
-      // full post view: replaces the list, comfortable width and type,
-      // closes only via the explicit back link (never by clicking the text).
-      const c = document.getElementById("blogContent");
-      const currentViews = viewCounts[String(post.id)] || 0;
-      c.innerHTML = `
-        <button class="blog-back" onclick="closeBlogDetail()">← back to blogs</button>
-        <h3 class="blog-detail-title">${esc(post.title)}</h3>
-        <span class="blog-detail-date">${esc(post.date || "")} · <span id="viewCountDetail">${currentViews}</span> view${currentViews === 1 ? "" : "s"}</span>
-        <div class="blog-detail-body">${esc(post.body)}</div>
-        ${(post.images && post.images.length) ? `
-        <div class="blog-slideshow" data-images='${JSON.stringify(post.images).replace(/'/g, "&#39;")}'>
-          <img class="blog-image" src="${esc(post.images[0])}" alt="${esc(post.title)}" onerror="this.closest('.blog-slideshow').remove()" />
-          ${post.images.length > 1 ? `<div class="slideshow-dots">${post.images.map((_, i) => `<span class="slideshow-dot${i === 0 ? " active" : ""}"></span>`).join("")}</div>` : ""}
-        </div>` : ""}
-        <div class="blog-detail-actions">
-          <button class="share-btn" onclick="sharePost(event, '${slug}')">copy link</button>
-          ${writeEnabled ? `<button class="delete-btn" onclick="deletePost(${post.id})">delete</button>` : ""}
-        </div>`;
-      initSlideshows();
-      history.replaceState(null, "", `#${slug}`);
-      window.scrollTo({ top: 0, behavior: "instant" });
-      registerView(post.id);
-    }
-
-    function registerView(id) {
-      // Only count once per tab/session per post, same guard style as the
-      // visitor ping, so refreshing a post doesn't inflate its count.
-      const key = `viewed:${id}`;
-      if (sessionStorage.getItem(key)) return;
-      sessionStorage.setItem(key, "1");
-
-      fetch(`${VIEW_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: "POST" })
-        .then(res => (res.ok ? res.json() : null))
-        .then(data => {
-          if (!data) return;
-          viewCounts[String(id)] = data.count;
-          const el = document.getElementById("viewCountDetail");
-          if (el) el.textContent = data.count;
-        })
-        .catch(() => {
-          /* Never let this break the page — swallow all errors. */
-        });
-    }
-
-    function openBlogDetail(slug) {
-      const slugs = slugMap();
-      const post = posts.find(p => slugs.get(p.id) === slug);
-      if (post) renderBlogDetail(post, slug);
-    }
-
-    function closeBlogDetail() {
-      history.replaceState(null, "", location.pathname);
-      paintBlogs();
-    }
-
-    function sharePost(event, slug) {
-      const url = `${location.origin}${location.pathname}#${slug}`;
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = event.currentTarget;
-        const original = btn.textContent;
-        btn.textContent = "copied!";
-        setTimeout(() => { btn.textContent = original; }, 1500);
-      }).catch(() => {
-        window.prompt("Copy this link:", url);
-      });
-    }
-
-    async function openPostFromHash() {
-      const match = location.hash.match(/^#(Blog\d+)$/i);
+    // Old shared links like /#Blog1 → send them to the post's real page.
+    async function openLegacyHashLink() {
+      const match = location.hash.match(/^#Blog(\d+)$/i);
       if (!match) return;
-      const slug = match[1];
       showPage("blogs");
-      await Promise.all([loadPostsIfNeeded(), loadViewCountsIfNeeded()]);
-      openBlogDetail(slug);
+      await loadPostsIfNeeded();
+      const chronological = [...posts].sort((a, b) => (a.id || 0) - (b.id || 0));
+      const post = chronological[parseInt(match[1], 10) - 1];
+      if (post) location.replace(`/blog/${slugMap().get(post.id)}/`);
     }
-    openPostFromHash();
+    openLegacyHashLink();
 
-    function initSlideshows() {
-      document.querySelectorAll(".blog-slideshow").forEach(el => {
-        if (el.dataset.init) return;
-        el.dataset.init = "1";
-        let images;
-        try { images = JSON.parse(el.dataset.images); } catch { images = []; }
-        if (images.length <= 1) return;
-        let idx = 0;
-        const img = el.querySelector(".blog-image");
-        const dots = el.querySelectorAll(".slideshow-dot");
-        setInterval(() => {
-          idx = (idx + 1) % images.length;
-          img.style.opacity = "0";
-          setTimeout(() => {
-            img.src = images[idx];
-            img.style.opacity = "1";
-          }, 200);
-          dots.forEach((d, i) => d.classList.toggle("active", i === idx));
-        }, 3000);
-      });
-    }
+    // /?page=blogs (or projects / about): used by the links on the post pages.
+    (function () {
+      const p = new URLSearchParams(location.search).get("page");
+      if (["about", "projects", "blogs"].includes(p)) {
+        showPage(p);
+        history.replaceState(null, "", location.pathname);
+      }
+    })();
 
     async function deletePost(id) {
       if (blogBusy) return;
