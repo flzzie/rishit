@@ -501,7 +501,7 @@
           <div class="proj-body">
             <div class="proj-name"><a class="proj-name-link" href="https://pawniac.fun" target="_blank" rel="noopener noreferrer">Pawniac</a></div>
             <div class="proj-sub" style="color:#c77595">Chess Variants Platform ♟️</div>
-            <p class="proj-desc">Built Pawniac, a free, ad-free chess platform where you can play standard chess and creative variants such as Hand and Brain, Piece Auction, and Double Move against anyone online. Development began on October 8, and 657 games have already been played. It was made because most chess sites don&#39;t offer variants like these, and players who wanted to improve didn&#39;t have a good option.<br><br>Its game analyzer is built for improving: it reviews your games and explains the pros and cons of each move and the ideas behind them, points out any repeating mistakes it can find, breaks down the key details of a position, and turns the mistakes in your analyzed games into puzzles so you can practice exactly what you got wrong.</p>
+            <p class="proj-desc">Built Pawniac, a free, ad-free chess platform where you can play standard chess and creative variants such as Hand and Brain, Piece Auction, and Double Move against anyone online. Development began on October 8, and <span id="pawniacGames">657</span> games have already been played. It was made because most chess sites don&#39;t offer variants like these, and players who wanted to improve didn&#39;t have a good option.<br><br>Its game analyzer is built for improving: it reviews your games and explains the pros and cons of each move and the ideas behind them, points out any repeating mistakes it can find, breaks down the key details of a position, and turns the mistakes in your analyzed games into puzzles so you can practice exactly what you got wrong.</p>
             <button class="proj-expand" aria-label="expand description">read more <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
@@ -1040,6 +1040,27 @@
         }),
       }).catch(() => {
         /* Never let this break the page — swallow all errors. */
+      });
+    })();
+  </script>
+
+  <script>
+    // Live "games played" for the Pawniac card. Reads Pawniac's public counters and uses the same
+    // formula as the pawniac.fun home page: online total or numbered-games counter (whichever is
+    // higher) plus bot games. Only totals are read, no player data. If anything fails, the number
+    // written in the card stays as it is.
+    (function () {
+      var DB = "https://anythingchess-46f24-default-rtdb.firebaseio.com/";
+      function num(path) {
+        return fetch(DB + path + ".json")
+          .then(function (r) { return r.ok ? r.json() : 0; })
+          .then(function (v) { return Number(v) || 0; })
+          .catch(function () { return 0; });
+      }
+      Promise.all([num("hb/counters/played/total"), num("hb/gameCount"), num("hb/counters/played/bot")]).then(function (a) {
+        var total = Math.max(a[0], a[1]) + a[2];
+        var el = document.getElementById("pawniacGames");
+        if (el && total > 0) el.textContent = total.toLocaleString("en-US");
       });
     })();
   </script>
